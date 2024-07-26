@@ -343,6 +343,7 @@ func (p S3Proxy) serveErrorPage(w http.ResponseWriter, s3Key string) error {
 	if err != nil {
 		return err
 	}
+	defer obj.Body.Close()
 
 	if err := p.writeResponseFromGetObject(w, obj); err != nil {
 		return err
@@ -448,6 +449,8 @@ func (p S3Proxy) GetHandler(w http.ResponseWriter, r *http.Request, fullPath str
 			obj, err = p.getS3Object(p.Bucket, indexPath, r.Header)
 			caddyErr := convertToCaddyError(err)
 			if err == nil || caddyErr.StatusCode == 304 {
+				defer obj.Body.Close()
+
 				// We found an index!
 				isDir = false
 				break
@@ -504,6 +507,7 @@ func (p S3Proxy) GetHandler(w http.ResponseWriter, r *http.Request, fullPath str
 
 		return caddyErr
 	}
+	defer obj.Body.Close()
 
 	return p.writeResponseFromGetObject(w, obj)
 }
